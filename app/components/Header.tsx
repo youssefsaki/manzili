@@ -34,16 +34,16 @@ export default function Header() {
       clearTimeout(scrollTimeoutRef.current)
     }
 
-    scrollTimeoutRef.current = setTimeout(() => {
-      const currentScrollY = window.scrollY
-      const scrollThreshold = 50
-      
-      // Only update state if there's a significant change
-      if (Math.abs(currentScrollY - lastScrollY.current) > 10) {
-        setIsScrolled(currentScrollY > scrollThreshold)
-        lastScrollY.current = currentScrollY
-      }
-    }, 10) // Throttle to 100fps max
+          scrollTimeoutRef.current = setTimeout(() => {
+        const currentScrollY = window.scrollY
+        const scrollThreshold = 20 // Reduced threshold for more responsive behavior
+        
+        // Only update state if there's a significant change
+        if (Math.abs(currentScrollY - lastScrollY.current) > 5) {
+          setIsScrolled(currentScrollY > scrollThreshold)
+          lastScrollY.current = currentScrollY
+        }
+      }, 10) // Throttle to 100fps max
   }, [])
 
   // Add scroll listener with passive option for performance
@@ -98,7 +98,12 @@ export default function Header() {
   }, [isMobileMenuOpen])
 
   const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen)
+    setIsMobileMenuOpen(prev => !prev)
+  }
+
+  const closeMobileMenu = () => {
+    // Add a small delay to allow the exit animation to complete
+    setIsMobileMenuOpen(false)
   }
 
   return (
@@ -115,6 +120,10 @@ export default function Header() {
           ? "bg-coffee-darkest/95 backdrop-blur-md shadow-lg" 
           : "bg-transparent"
       }`}
+      style={{
+        backgroundColor: isScrolled ? undefined : 'transparent',
+        backdropFilter: isScrolled ? 'blur(12px)' : 'none',
+      }}
     >
       <nav className="container mx-auto px-6 py-4" aria-label="Main navigation">
         <div className="flex items-center justify-between">
@@ -157,7 +166,7 @@ export default function Header() {
           {/* Mobile Menu Button */}
           <motion.button
             className="lg:hidden text-coffee-light p-2 rounded-lg hover:bg-coffee-dark/20 transition-colors duration-200"
-            onClick={toggleMobileMenu}
+            onClick={isMobileMenuOpen ? closeMobileMenu : toggleMobileMenu}
             whileTap={{ scale: 0.95 }}
             aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
             aria-expanded={isMobileMenuOpen}
@@ -190,16 +199,16 @@ export default function Header() {
         </div>
 
         {/* Mobile Navigation */}
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
           {isMobileMenuOpen && (
             <motion.div
               ref={mobileMenuRef}
               id="mobile-menu"
-              initial={{ opacity: 0, height: 0, y: -20 }}
-              animate={{ opacity: 1, height: "auto", y: 0 }}
-              exit={{ opacity: 0, height: 0, y: -20 }}
+              initial={{ opacity: 0, height: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, height: "auto", y: 0, scale: 1 }}
+              exit={{ opacity: 0, height: 0, y: -20, scale: 0.95 }}
               transition={{ 
-                duration: 0.3,
+                duration: 0.4,
                 ease: [0.25, 0.46, 0.45, 0.94]
               }}
               className="lg:hidden mt-4 pb-4 border-t border-coffee-medium/20"
@@ -209,11 +218,13 @@ export default function Header() {
                   <motion.a
                     key={item.id}
                     href={item.href}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
+                    initial={{ opacity: 0, x: -20, scale: 0.9 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: -20, scale: 0.9 }}
                     transition={{ 
                       delay: index * 0.1,
-                      duration: 0.3 
+                      duration: 0.4,
+                      ease: [0.25, 0.46, 0.45, 0.94]
                     }}
                     className="block py-3 px-4 text-coffee-light/80 hover:text-coffee-light hover:bg-coffee-dark/20 rounded-lg transition-all duration-200 font-light"
                     onClick={() => setIsMobileMenuOpen(false)}
