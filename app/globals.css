@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Coffee-themed color palette */
+    --coffee-dark: #4b2e1d;
+    --coffee-medium: #d4a373;
+    --coffee-light: #eae0d5;
+    --coffee-cream: #fff4e6;
+    --coffee-darkest: #3c1f0f;
+
+    /* Default light theme */
+    --background: 255 244 230;
+    --foreground: 75 46 29;
+    --card: 255 255 255;
+    --card-foreground: 75 46 29;
+    --popover: 255 255 255;
+    --popover-foreground: 75 46 29;
+    --primary: 75 46 29;
+    --primary-foreground: 234 224 213;
+    --secondary: 234 224 213;
+    --secondary-foreground: 75 46 29;
+    --muted: 234 224 213;
+    --muted-foreground: 75 46 29;
+    --accent: 212 163 115;
+    --accent-foreground: 75 46 29;
+    --destructive: 220 38 38;
+    --destructive-foreground: 254 242 242;
+    --border: 212 163 115;
+    --input: 234 224 213;
+    --ring: 212 163 115;
+    --radius: 0.75rem;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-coffee-cream text-coffee-dark;
+  }
+}
+
+@layer components {
+  .container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+}
+
+/* Hide Next.js branding and indicators */
+#__next-build-watcher,
+.nextjs-toast-errors,
+[data-nextjs-toast],
+[data-nextjs-dialog],
+[data-nextjs-portal] {
+  display: none !important;
+}
+
+/* Hide any remaining Next.js development indicators */
+[class*="nextjs"],
+[class*="__next"] {
+  display: none !important;
+}
