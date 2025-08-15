@@ -55,7 +55,7 @@ export default function LandingPage() {
           </Suspense>
           
           <Suspense fallback={<SectionLoader />}>
-            <HeroSection />
+            <HeroSection videoLoaded={true} />
           </Suspense>
           
           <Suspense fallback={<SectionLoader />}>

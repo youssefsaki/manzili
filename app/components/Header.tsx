@@ -22,7 +22,7 @@ const navigationItems: NavItem[] = [
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isMenuHovered, setIsMenuHovered] = useState(false)
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null)
   
   // Ref for scroll performance optimization
   const scrollTimeoutRef = useRef<NodeJS.Timeout>()
@@ -146,8 +146,8 @@ export default function Header() {
                 href={item.href}
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.95 }}
-                onMouseEnter={() => setIsMenuHovered(true)}
-                onMouseLeave={() => setIsMenuHovered(false)}
+                onMouseEnter={() => setHoveredItem(item.id)}
+                onMouseLeave={() => setHoveredItem(null)}
                 className="relative text-coffee-light/90 hover:text-coffee-light transition-colors duration-300 font-light tracking-wide py-2"
                 aria-label={`Navigate to ${item.label} section`}
               >
@@ -156,7 +156,7 @@ export default function Header() {
                 <motion.div
                   className="absolute bottom-0 left-0 h-0.5 bg-coffee-medium"
                   initial={{ width: 0 }}
-                  animate={{ width: isMenuHovered ? "100%" : 0 }}
+                  animate={{ width: hoveredItem === item.id ? "100%" : 0 }}
                   transition={{ duration: 0.3 }}
                 />
               </motion.a>
