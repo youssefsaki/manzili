@@ -116,7 +116,7 @@ export default function StorySection() {
   const ref = useRef<HTMLDivElement>(null)
   const [isClient, setIsClient] = useState(false)
   const [isScrolling, setIsScrolling] = useState(false)
-  const [visibleCards, setVisibleCards] = useState<Set<number>>(new Set([0, 1, 2]))
+  const [visibleCards, setVisibleCards] = useState<Set<number>>(new Set([0, 1, 2, 3, 4]))
   
   // Performance-optimized scroll tracking with throttling
   const { scrollYProgress } = useScroll({

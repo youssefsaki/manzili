@@ -93,14 +93,8 @@ export default function HeroSection({ videoLoaded = true }: HeroSectionProps) {
             x5-video-player-fullscreen="true"
           >
             <source 
-              src="/hero-coffee-video-desktop.mp4" 
+              src={currentVideoSource}
               type="video/mp4" 
-              media="(min-width: 768px)"
-            />
-            <source 
-              src="/hero-coffee-mobile.mp4" 
-              type="video/mp4" 
-              media="(max-width: 767px)"
             />
           </video>
         ) : (
