@@ -272,9 +272,9 @@ export default function Footer() {
             </div>
 
             {/* Newsletter Signup */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.8 }}
               viewport={{ once: true, amount: 0.2 }}
               className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20"
