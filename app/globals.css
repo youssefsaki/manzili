@@ -105,3 +105,21 @@ video {
   will-change: transform;
   backface-visibility: hidden;
 }
+
+/* iOS Safari video compatibility */
+video::-webkit-media-controls {
+  display: none !important;
+}
+
+video::-webkit-media-controls-start-playback-button {
+  display: none !important;
+}
+
+/* Force hardware acceleration on iOS */
+video {
+  -webkit-transform: translateZ(0);
+  -moz-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  -o-transform: translateZ(0);
+  transform: translateZ(0);
+}

@@ -85,6 +85,10 @@ export default function HeroSection({ videoLoaded = true }: HeroSectionProps) {
             className="w-full h-full object-cover"
             style={{ objectPosition: "center center" }}
             aria-hidden="true"
+            webkit-playsinline="true"
+            x5-playsinline="true"
+            x5-video-player-type="h5"
+            x5-video-player-fullscreen="true"
           >
             <source 
               src="/hero-coffee-video-desktop.mp4" 
@@ -96,7 +100,6 @@ export default function HeroSection({ videoLoaded = true }: HeroSectionProps) {
               type="video/mp4" 
               media="(max-width: 767px)"
             />
-            <source src="/hero-coffee-video.mp4" type="video/mp4" />
           </video>
         ) : (
           <div
