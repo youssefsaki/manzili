@@ -219,3 +219,56 @@ video {
     -webkit-playsinline: true;
   }
 }
+
+/* Mobile video autoplay enforcement */
+@media (max-width: 768px) {
+  video {
+    /* Force autoplay on mobile */
+    -webkit-playsinline: true !important;
+    playsinline: true !important;
+    
+    /* Prevent mobile browser interference */
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+    
+    /* Ensure video starts playing */
+    autoplay: true !important;
+    muted: true !important;
+    
+    /* Hardware acceleration */
+    will-change: transform !important;
+    transform: translateZ(0) !important;
+    -webkit-transform: translateZ(0) !important;
+  }
+}
+
+/* iOS Safari autoplay enforcement */
+@supports (-webkit-touch-callout: none) {
+  video {
+    /* Force iOS autoplay */
+    -webkit-playsinline: true !important;
+    -webkit-video-playable-inline: true !important;
+    -webkit-presentation-mode: inline !important;
+    
+    /* Prevent fullscreen on iOS */
+    -webkit-full-screen: none !important;
+    
+    /* Ensure autoplay works */
+    autoplay: true !important;
+    muted: true !important;
+  }
+}
+
+/* Android autoplay enforcement */
+@supports (-webkit-appearance: none) and (display: flex) {
+  video {
+    /* Force Android autoplay */
+    -webkit-playsinline: true !important;
+    playsinline: true !important;
+    
+    /* Ensure video starts */
+    autoplay: true !important;
+    muted: true !important;
+  }
+}

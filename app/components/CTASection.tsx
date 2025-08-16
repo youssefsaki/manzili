@@ -146,7 +146,7 @@ const OptimizedVideo = memo(({
   const [isLoaded, setIsLoaded] = useState(false)
   const [hasError, setHasError] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [showPlayButton, setShowPlayButton] = useState(true)
+  const [autoplayAttempted, setAutoplayAttempted] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
 
   // Universal video attributes that work on all platforms
@@ -154,13 +154,10 @@ const OptimizedVideo = memo(({
     const baseAttrs = {
       className: "w-full h-full object-cover transition-transform duration-700 group-hover:scale-110",
       preload: "metadata" as const,
-      muted: true,
+      autoPlay: true, // Force autoplay
+      muted: true, // Required for autoplay
       loop: true,
       playsInline: true,
-      webkitPlaysinline: "true" as any,
-      x5Playsinline: "true" as any,
-      x5VideoPlayerType: "h5" as any,
-      x5VideoPlayerFullscreen: "true" as any,
     }
 
     // iOS-specific optimizations
@@ -179,58 +176,76 @@ const OptimizedVideo = memo(({
   const handleLoadedData = useCallback(() => {
     setIsLoaded(true)
     setHasError(false)
-    setShowPlayButton(false)
   }, [])
 
   const handleError = useCallback(() => {
     setHasError(true)
     setIsLoaded(false)
-    setShowPlayButton(false)
   }, [])
 
   const handleCanPlay = useCallback(() => {
     setIsPlaying(true)
-    setShowPlayButton(false)
   }, [])
 
-  // Handle play button click
-  const handlePlayClick = useCallback(() => {
-    const video = videoRef.current
-    if (video) {
-      const playPromise = video.play()
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            setIsPlaying(true)
-            setShowPlayButton(false)
-          })
-          .catch(() => {
-            setShowPlayButton(true)
-          })
-      }
-    }
-  }, [])
-
-  // Try to autoplay when video is ready
+  // Force autoplay on mobile devices
   useEffect(() => {
     const video = videoRef.current
-    if (!video || !isLoaded) return
+    if (!video || !isLoaded || autoplayAttempted) return
 
-    // Try to autoplay
-    const playPromise = video.play()
-    
-    if (playPromise !== undefined) {
-      playPromise
-        .then(() => {
+    setAutoplayAttempted(true)
+
+    // Force autoplay with multiple attempts
+    const forceAutoplay = async () => {
+      try {
+        // First attempt: direct play
+        await video.play()
+        setIsPlaying(true)
+        return
+      } catch (error) {
+        console.log('First autoplay attempt failed, trying alternative method')
+      }
+
+      try {
+        // Second attempt: with user interaction simulation
+        video.currentTime = 0
+        await video.play()
+        setIsPlaying(true)
+        return
+      } catch (error) {
+        console.log('Second autoplay attempt failed')
+      }
+
+      try {
+        // Third attempt: iOS specific
+        if (isIOS) {
+          video.load()
+          await video.play()
           setIsPlaying(true)
-          setShowPlayButton(false)
-        })
-        .catch(() => {
-          // Autoplay failed, show play button
-          setShowPlayButton(true)
-        })
+          return
+        }
+      } catch (error) {
+        console.log('iOS autoplay attempt failed')
+      }
+
+      // Final attempt: Android specific
+      if (isAndroid) {
+        try {
+          video.load()
+          await video.play()
+          setIsPlaying(true)
+        } catch (error) {
+          console.log('Android autoplay attempt failed')
+        }
+      }
     }
-  }, [isLoaded])
+
+    // Delay autoplay slightly to ensure video is ready
+    const timer = setTimeout(() => {
+      forceAutoplay()
+    }, 100)
+
+    return () => clearTimeout(timer)
+  }, [isLoaded, autoplayAttempted, isIOS, isAndroid])
 
   // Lazy load video on intersection
   useEffect(() => {
@@ -299,6 +314,8 @@ const OptimizedVideo = memo(({
         controls={false}
         disablePictureInPicture={true}
         disableRemotePlayback={true}
+        // Mobile-specific attributes
+        preload="auto"
       >
         {/* Multiple format support for maximum compatibility */}
         <source src={post.thumbnail} type="video/mp4" />
@@ -311,22 +328,6 @@ const OptimizedVideo = memo(({
           <a href={post.thumbnail} className="underline ml-1">Download video</a>
         </p>
       </video>
-      
-      {/* Play button overlay when video is not playing */}
-      {showPlayButton && (
-        <motion.button
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={handlePlayClick}
-          className="absolute inset-0 bg-black/30 flex items-center justify-center group cursor-pointer"
-        >
-          <div className="bg-white/20 backdrop-blur-sm rounded-full p-4 group-hover:bg-white/30 transition-all duration-300">
-            <Play size={32} className="text-white ml-1" />
-          </div>
-        </motion.button>
-      )}
     </div>
   )
 })

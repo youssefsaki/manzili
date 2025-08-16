@@ -1,7 +1,7 @@
 "use client"
 
-import { motion, useScroll, useTransform, useMotionValueEvent } from "framer-motion"
-import { useRef, useEffect, useState, useMemo, useCallback, useLayoutEffect } from "react"
+import { motion, useScroll, useTransform, useMotionValueEvent, useMotionValue } from "framer-motion"
+import { useRef, useState, useMemo, useCallback, useLayoutEffect } from "react"
 import Image from "next/image"
 
 // Types for better maintainability
@@ -118,11 +118,18 @@ export default function StorySection() {
   const [isScrolling, setIsScrolling] = useState(false)
   const [visibleCards, setVisibleCards] = useState<Set<number>>(new Set([0, 1, 2, 3, 4]))
   
+  // Create fallback MotionValue for SSR
+  const fallbackScrollProgress = useMotionValue(0)
+  
   // Performance-optimized scroll tracking with throttling
-  const { scrollYProgress } = useScroll({
+  const scrollData = useScroll({
     target: ref,
     offset: ["start end", "end start"],
+    layoutEffect: false, // Prevent hydration issues
   })
+  
+  // Only use scroll data when client is ready
+  const scrollYProgress = isClient ? scrollData.scrollYProgress : fallbackScrollProgress
 
   // Optimized transform with better performance
   const x = useTransform(

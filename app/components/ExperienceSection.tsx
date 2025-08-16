@@ -1,6 +1,6 @@
 "use client"
 
-import { motion, useScroll, useTransform, useMotionValueEvent } from "framer-motion"
+import { motion, useScroll, useTransform, useMotionValueEvent, useMotionValue } from "framer-motion"
 import { useRef, useState, useEffect, useMemo, useCallback, memo } from "react"
 import Image from "next/image"
 import { ChevronLeft, ChevronRight, Star, Heart, Share2 } from "lucide-react"
@@ -355,14 +355,27 @@ export default function ExperienceSection() {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [likedDrinks, setLikedDrinks] = useState<Set<string>>(new Set())
   const [isScrolling, setIsScrolling] = useState(false)
+  const [isClient, setIsClient] = useState(false)
   
   const isMobile = useIsMobile(BREAKPOINT)
 
+  // Set client-side flag to prevent hydration issues
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  // Create fallback MotionValue for SSR
+  const fallbackScrollProgress = useMotionValue(0)
+
   // Optimized scroll tracking with throttling
-  const { scrollYProgress } = useScroll({
+  const scrollData = useScroll({
     target: ref,
     offset: ["start end", "end start"],
+    layoutEffect: false, // Prevent hydration issues
   })
+  
+  // Only use scroll data when client is ready
+  const scrollYProgress = isClient ? scrollData.scrollYProgress : fallbackScrollProgress
 
   // Memoized transform for better performance
   const y = useTransform(scrollYProgress, [0, 1], [100, -100])

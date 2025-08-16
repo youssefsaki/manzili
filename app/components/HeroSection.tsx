@@ -1,24 +1,31 @@
 "use client"
 
-import { motion, useScroll, useTransform } from "framer-motion"
-import { useRef, useEffect, useState, useCallback } from "react"
+import { motion, useScroll, useTransform, useMotionValue } from "framer-motion"
+import { useRef, useState, useCallback, useEffect } from "react"
 import SteamAnimation from "./SteamAnimation"
 
 interface HeroSectionProps {
   videoLoaded?: boolean
 }
 
-export default function HeroSection({ videoLoaded = true }: HeroSectionProps) {
+export default function HeroSection({ videoLoaded = false }: { videoLoaded?: boolean }) {
   const ref = useRef<HTMLDivElement>(null)
   const [isClient, setIsClient] = useState(false)
   const [isVideoReady, setIsVideoReady] = useState(false)
   const [currentVideoSource, setCurrentVideoSource] = useState<string>("")
   
+  // Create fallback MotionValue for SSR
+  const fallbackScrollProgress = useMotionValue(0)
+  
   // Optimize scroll tracking with proper container reference
-  const { scrollYProgress } = useScroll({
+  const scrollData = useScroll({
     target: ref,
     offset: ["start start", "end start"],
+    layoutEffect: false, // Prevent hydration issues
   })
+  
+  // Only use scroll data when client is ready
+  const scrollYProgress = isClient ? scrollData.scrollYProgress : fallbackScrollProgress
 
   // Create transforms - these are optimized by Framer Motion internally
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"])
