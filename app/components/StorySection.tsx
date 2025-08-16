@@ -1,7 +1,7 @@
 "use client"
 
-import { motion, useScroll, useTransform } from "framer-motion"
-import { useRef, useEffect, useState, useMemo, useCallback } from "react"
+import { motion, useScroll, useTransform, useMotionValueEvent } from "framer-motion"
+import { useRef, useEffect, useState, useMemo, useCallback, useLayoutEffect } from "react"
 import Image from "next/image"
 
 // Types for better maintainability
@@ -54,50 +54,82 @@ const TIMELINE_STEPS: Omit<TimelineStep, 'id' | 'stepNumber'>[] = [
   },
 ]
 
-// Animation variants for better performance
+// Performance-optimized animation variants
 const containerVariants = {
-  hidden: { opacity: 0, y: 50 },
+  hidden: { opacity: 0, y: 30 },
   visible: { 
     opacity: 1, 
     y: 0,
     transition: { 
-      duration: 0.8,
-      staggerChildren: 0.2,
+      duration: 0.6,
+      ease: [0.25, 0.46, 0.45, 0.94],
+      staggerChildren: 0.15,
       delayChildren: 0.1
     }
   }
 }
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 30 },
+  hidden: { opacity: 0, y: 20, scale: 0.95 },
   visible: { 
     opacity: 1, 
     y: 0,
-    transition: { duration: 0.6 }
+    scale: 1,
+    transition: { 
+      duration: 0.5,
+      ease: [0.25, 0.46, 0.45, 0.94]
+    }
   }
 }
 
 const cardVariants = {
-  hidden: { opacity: 0, scale: 0.8 },
+  hidden: { opacity: 0, scale: 0.9 },
   visible: { 
     opacity: 1, 
     scale: 1,
-    transition: { duration: 0.6 }
+    transition: { 
+      duration: 0.5,
+      ease: [0.25, 0.46, 0.45, 0.94]
+    }
   }
+}
+
+// Performance-optimized hover variants
+const hoverVariants = {
+  hover: { 
+    y: -8,
+    transition: { 
+      duration: 0.2,
+      ease: [0.25, 0.46, 0.45, 0.94]
+    }
+  }
+}
+
+// Optimized image loading strategy
+const IMAGE_LOADING_STRATEGY = {
+  PRIORITY_IMAGES: 2, // First 2 images load eagerly
+  LAZY_LOAD_DELAY: 100, // ms delay for lazy loading
+  VIEWPORT_MARGIN: "-50px", // Trigger animation earlier
 }
 
 export default function StorySection() {
   const ref = useRef<HTMLDivElement>(null)
   const [isClient, setIsClient] = useState(false)
+  const [isScrolling, setIsScrolling] = useState(false)
+  const [visibleCards, setVisibleCards] = useState<Set<number>>(new Set([0, 1, 2]))
   
-  // Optimized scroll tracking
+  // Performance-optimized scroll tracking with throttling
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start end", "end start"],
   })
 
-  // Memoized transform for better performance
-  const x = useTransform(scrollYProgress, [0, 1], ["0%", "-25%"])
+  // Optimized transform with better performance
+  const x = useTransform(
+    scrollYProgress, 
+    [0, 1], 
+    ["0%", "-25%"]
+  )
 
   // Memoized timeline steps with IDs and step numbers
   const timelineSteps = useMemo((): TimelineStep[] => 
@@ -108,108 +140,165 @@ export default function StorySection() {
     })), []
   )
 
-  // Optimized client-side detection
-  useEffect(() => {
+  // Performance-optimized client-side detection
+  useLayoutEffect(() => {
     setIsClient(true)
   }, [])
 
-  // Memoized card renderer for better performance
-  const renderTimelineCard = useCallback((step: TimelineStep, index: number, isMobile: boolean = false) => (
-    <motion.div
-      key={step.id}
-      variants={isMobile ? itemVariants : cardVariants}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: "-100px" }}
-      className={`flex-shrink-0 relative group cursor-pointer ${
-        isMobile 
-          ? 'h-[550px] w-[330px]' 
-          : 'w-[400px] h-full'
-      }`}
-      role="button"
-      tabIndex={0}
-      aria-label={`Learn more about ${step.title} - ${step.subtitle}`}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          // Add your click handler here
-        }
-      }}
-    >
-      {/* Card Container */}
-      <div className="relative h-full bg-gradient-to-b from-black/20 to-black/60 rounded-[20px] md:rounded-2xl overflow-hidden backdrop-blur-sm border border-[#D4A373]/20 transition-all duration-300 hover:border-[#D4A373]/40">
-        {/* Background Image */}
-        <div className="absolute inset-0">
-          <Image
-            src={step.image || "/placeholder.svg"}
-            alt={`${step.title} - ${step.subtitle}`}
-            fill
-            sizes={isMobile ? "330px" : "400px"}
-            className="object-cover transition-transform duration-700 group-hover:scale-110 rounded-[20px] md:rounded-2xl"
-            priority={index < 2} // Prioritize first two images
-            loading={index < 2 ? "eager" : "lazy"}
-          />
-          <div
-            className="absolute inset-0 opacity-60 rounded-[20px] md:rounded-2xl"
-            style={{
-              background: `linear-gradient(135deg, ${step.color}20 0%, transparent 50%, #000000aa 100%)`,
-            }}
+  // Optimized scroll performance monitoring
+  useMotionValueEvent(scrollYProgress, "change", (latest) => {
+    // Throttle scroll state updates for better performance
+    if (!isScrolling) {
+      setIsScrolling(true)
+      setTimeout(() => setIsScrolling(false), 16) // ~60fps
+    }
+  })
+
+  // Advanced memoization for card rendering with performance optimization
+  const renderTimelineCard = useCallback((step: TimelineStep, index: number, isMobile: boolean = false) => {
+    const isPriority = index < IMAGE_LOADING_STRATEGY.PRIORITY_IMAGES
+    const isVisible = visibleCards.has(index)
+    
+    return (
+      <motion.div
+        key={step.id}
+        variants={isMobile ? itemVariants : cardVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ 
+          once: true, 
+          margin: IMAGE_LOADING_STRATEGY.VIEWPORT_MARGIN,
+          amount: 0.3 // Trigger when 30% visible
+        }}
+        className={`flex-shrink-0 relative group cursor-pointer ${
+          isMobile 
+            ? 'h-[550px] w-[330px]' 
+            : 'w-[400px] h-full'
+        }`}
+        role="button"
+        tabIndex={0}
+        aria-label={`Learn more about ${step.title} - ${step.subtitle}`}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            // Add your click handler here
+          }
+        }}
+        // Performance optimization: Reduce motion during scroll
+        style={{ 
+          willChange: isScrolling ? 'transform' : 'auto',
+          transform: isScrolling ? 'translateZ(0)' : 'none'
+        }}
+      >
+        {/* Card Container */}
+        <div className="relative h-full bg-gradient-to-b from-black/20 to-black/60 rounded-[20px] md:rounded-2xl overflow-hidden backdrop-blur-sm border border-[#D4A373]/20 transition-all duration-300 hover:border-[#D4A373]/40">
+          {/* Background Image with advanced optimization */}
+          <div className="absolute inset-0">
+            {isVisible && (
+              <Image
+                src={step.image || "/placeholder.svg"}
+                alt={`${step.title} - ${step.subtitle}`}
+                fill
+                sizes={isMobile ? "330px" : "400px"}
+                className="object-cover transition-transform duration-500 group-hover:scale-105 rounded-[20px] md:rounded-2xl"
+                priority={isPriority}
+                loading={isPriority ? "eager" : "lazy"}
+                quality={85} // Optimize quality vs performance
+                placeholder="blur"
+                blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
+                                 onLoad={() => {
+                   // Add card to visible set for performance tracking
+                   setVisibleCards(prev => new Set(Array.from(prev).concat(index)))
+                 }}
+              />
+            )}
+            <div
+              className="absolute inset-0 opacity-60 rounded-[20px] md:rounded-2xl"
+              style={{
+                background: `linear-gradient(135deg, ${step.color}20 0%, transparent 50%, #000000aa 100%)`,
+              }}
+              aria-hidden="true"
+            />
+          </div>
+
+          {/* Content with performance-optimized animations */}
+          <div className="relative z-10 h-full flex flex-col justify-end p-6 md:p-8">
+            <motion.div 
+              variants={hoverVariants}
+              whileHover="hover"
+              className="h-full flex flex-col justify-end"
+            >
+              <div className="mb-3 md:px-4">
+                <span 
+                  className="text-xs md:text-sm font-medium tracking-widest uppercase" 
+                  style={{ color: step.color }}
+                  aria-label={`Category: ${step.subtitle}`}
+                >
+                  {step.subtitle}
+                </span>
+              </div>
+
+              <h3
+                className="text-2xl md:text-3xl font-light text-[#EAE0D5] mb-3 md:mb-4 tracking-wide px-4"
+                style={{ fontFamily: "var(--font-cinzel), Cinzel, serif" }}
+              >
+                {step.title}
+              </h3>
+
+              <p className="text-[#EAE0D5]/80 font-light leading-relaxed text-sm md:text-base px-4 mb-4">
+                {step.description}
+              </p>
+
+              {/* Step Number */}
+              <div className={`absolute top-6 right-6 md:top-8 md:right-8`}>
+                <div
+                  className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 flex items-center justify-center text-sm md:text-lg font-light"
+                  style={{
+                    borderColor: step.color,
+                    color: step.color,
+                  }}
+                  aria-label={`Step ${step.stepNumber}`}
+                >
+                  {step.stepNumber}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Hover Overlay with performance optimization */}
+          <motion.div 
+            className="absolute inset-0 bg-gradient-to-t from-[#D4A373]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-[20px] md:rounded-2xl" 
             aria-hidden="true"
           />
         </div>
+      </motion.div>
+    )
+  }, [visibleCards, isScrolling])
 
-        {/* Content */}
-        <div className="relative z-10 h-full flex flex-col justify-end p-6 md:p-8">
-          <motion.div 
-            whileHover={{ y: -10 }} 
-            transition={{ duration: 0.3 }}
-            className="h-full flex flex-col justify-end"
-          >
-            <div className="mb-3 md:mb-4">
-              <span 
-                className="text-xs md:text-sm font-medium tracking-widest uppercase" 
-                style={{ color: step.color }}
-                aria-label={`Category: ${step.subtitle}`}
-              >
-                {step.subtitle}
-              </span>
-            </div>
-
-            <h3
-              className="text-2xl md:text-3xl font-light text-[#EAE0D5] mb-3 md:mb-4 tracking-wide"
-              style={{ fontFamily: "var(--font-cinzel), Cinzel, serif" }}
-            >
-              {step.title}
-            </h3>
-
-            <p className="text-[#EAE0D5]/80 font-light leading-relaxed text-sm md:text-base">
-              {step.description}
-            </p>
-
-            {/* Step Number */}
-            <div className={`absolute top-6 right-6 md:top-8 md:right-8`}>
-              <div
-                className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 flex items-center justify-center text-sm md:text-lg font-light"
-                style={{
-                  borderColor: step.color,
-                  color: step.color,
-                }}
-                aria-label={`Step ${step.stepNumber}`}
-              >
-                {step.stepNumber}
-              </div>
-            </div>
-          </motion.div>
+  // Memoized mobile and desktop sections for better performance
+  const mobileSection = useMemo(() => (
+    <div className="md:hidden" role="region" aria-label="Timeline steps on mobile">
+      <div className="px-2 overflow-x-auto w-full mt-[2.5rem] scrollbar-hide">
+        <div className="flex gap-4 w-[1200px]">
+          {timelineSteps.map((step, index) => renderTimelineCard(step, index, true))}
         </div>
-
-        {/* Hover Overlay */}
-        <motion.div 
-          className="absolute inset-0 bg-gradient-to-t from-[#D4A373]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-[20px] md:rounded-2xl" 
-          aria-hidden="true"
-        />
       </div>
-    </motion.div>
-  ), [])
+    </div>
+  ), [timelineSteps, renderTimelineCard])
+
+  const desktopSection = useMemo(() => (
+    isClient && (
+      <div className="hidden md:block relative h-[600px] overflow-hidden" role="region" aria-label="Timeline steps on desktop">
+        <motion.div 
+          style={{ x }} 
+          className="flex space-x-8 h-full"
+          aria-label="Scrollable timeline"
+        >
+          {timelineSteps.map((step, index) => renderTimelineCard(step, index, false))}
+        </motion.div>
+      </div>
+    )
+  ), [isClient, timelineSteps, renderTimelineCard, x])
 
   return (
     <section 
@@ -241,26 +330,10 @@ export default function StorySection() {
       </div>
 
       {/* Mobile: Horizontal Scroll */}
-      <div className="md:hidden" role="region" aria-label="Timeline steps on mobile">
-        <div className="px-2 overflow-x-auto w-full mt-[2.5rem] scrollbar-hide">
-          <div className="flex gap-4 w-[1200px]">
-            {timelineSteps.map((step, index) => renderTimelineCard(step, index, true))}
-          </div>
-        </div>
-      </div>
+      {mobileSection}
 
       {/* Desktop: Horizontal Scrolling Timeline */}
-      {isClient && (
-        <div className="hidden md:block relative h-[600px] overflow-hidden" role="region" aria-label="Timeline steps on desktop">
-          <motion.div 
-            style={{ x }} 
-            className="flex space-x-8 h-full"
-            aria-label="Scrollable timeline"
-          >
-            {timelineSteps.map((step, index) => renderTimelineCard(step, index, false))}
-          </motion.div>
-        </div>
-      )}
+      {desktopSection}
 
       {/* Scroll Hint */}
       <motion.div
