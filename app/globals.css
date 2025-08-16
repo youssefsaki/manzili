@@ -100,6 +100,36 @@
   scroll-behavior: smooth;
 }
 
+/* iOS-specific image loading fixes */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari specific styles */
+  img {
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Fix for iOS image loading issues */
+  .next-image-wrapper {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+  
+  /* Ensure images load properly on iOS */
+  img[src*=".jpg"], img[src*=".jpeg"], img[src*=".png"] {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+}
+
+/* Force hardware acceleration for images on mobile */
+@media (max-width: 768px) {
+  img {
+    will-change: transform;
+    transform: translateZ(0);
+  }
+}
+
 /* Ensure video elements don't interfere with scroll performance */
 video {
   will-change: transform;

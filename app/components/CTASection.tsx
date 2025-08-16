@@ -271,6 +271,9 @@ const InstagramPostCard = memo(({
   isIOS: boolean;
   isAndroid: boolean;
 }) => {
+  const [imageError, setImageError] = useState(false)
+  const [imageLoaded, setImageLoaded] = useState(false)
+  
   const handleHoverStart = useCallback(() => {
     setHoveredIndex(index)
   }, [index, setHoveredIndex])
@@ -278,6 +281,30 @@ const InstagramPostCard = memo(({
   const handleHoverEnd = useCallback(() => {
     setHoveredIndex(null)
   }, [setHoveredIndex])
+
+  const handleImageError = useCallback(() => {
+    setImageError(true)
+  }, [])
+
+  const handleImageLoad = useCallback(() => {
+    setImageLoaded(true)
+    setImageError(false)
+  }, [])
+
+  // Fallback image sources for iOS compatibility
+  const getFallbackImage = useCallback(() => {
+    if (imageError) {
+      // Try multiple fallback options
+      const fallbacks = [
+        "/placeholder.svg",
+        "/espresso.jpg",
+        "/cappuccino.jpg",
+        "/coldbrew.jpg"
+      ]
+      return fallbacks[index % fallbacks.length]
+    }
+    return post.thumbnail
+  }, [imageError, index, post.thumbnail])
 
   return (
     <motion.div
@@ -304,17 +331,46 @@ const InstagramPostCard = memo(({
             isAndroid={isAndroid} 
           />
         ) : (
-          <Image
-            src={post.thumbnail || "/placeholder.svg"}
-            alt={post.altText || post.caption}
-            fill
-            className="object-cover transition-transform duration-700 group-hover:scale-110"
-            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            priority={index < 3} // Prioritize first 3 images
-            quality={85}
-            placeholder="blur"
-            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxIRAD8AnQAZl//Z"
-          />
+          <div className="relative w-full h-full">
+            <Image
+              src={getFallbackImage()}
+              alt={post.altText || post.caption}
+              fill
+              className="object-cover transition-transform duration-700 group-hover:scale-110"
+              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              priority={index < 3} // Prioritize first 3 images
+              quality={85}
+              placeholder="blur"
+              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxIRAD8AnQAZl//Z"
+              onError={handleImageError}
+              onLoad={handleImageLoad}
+              // iOS-specific optimizations
+              unoptimized={isIOS} // Disable Next.js optimization for iOS to avoid issues
+              style={{
+                objectFit: 'cover',
+                objectPosition: 'center',
+              }}
+            />
+            
+            {/* Loading state for iOS */}
+            {!imageLoaded && !imageError && (
+              <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
+                <div className="w-8 h-8 border-2 border-[#D4A373] border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
+            
+            {/* Error state with fallback */}
+            {imageError && (
+              <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
+                <div className="text-center text-gray-500">
+                  <div className="w-12 h-12 mx-auto mb-2 bg-gray-300 rounded-full flex items-center justify-center">
+                    <span className="text-2xl">📷</span>
+                  </div>
+                  <p className="text-xs">Image unavailable</p>
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Hover Overlay */}
