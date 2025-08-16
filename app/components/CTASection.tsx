@@ -146,53 +146,91 @@ const OptimizedVideo = memo(({
   const [isLoaded, setIsLoaded] = useState(false)
   const [hasError, setHasError] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [showPlayButton, setShowPlayButton] = useState(true)
   const videoRef = useRef<HTMLVideoElement>(null)
 
-  // Device-specific video attributes
+  // Universal video attributes that work on all platforms
   const videoAttributes = useMemo(() => {
     const baseAttrs = {
       className: "w-full h-full object-cover transition-transform duration-700 group-hover:scale-110",
       preload: "metadata" as const,
-      autoPlay: true,
       muted: true,
       loop: true,
       playsInline: true,
+      webkitPlaysinline: "true" as any,
+      x5Playsinline: "true" as any,
+      x5VideoPlayerType: "h5" as any,
+      x5VideoPlayerFullscreen: "true" as any,
     }
 
     // iOS-specific optimizations
     if (isIOS) {
       return {
         ...baseAttrs,
-        preload: "none" as const, // iOS doesn't support preload="metadata"
-        muted: true, // iOS requires muted for autoplay
-      }
-    }
-
-    // Android-specific optimizations
-    if (isAndroid) {
-      return {
-        ...baseAttrs,
-        preload: "metadata" as const,
+        preload: "none" as const,
+        muted: true,
       }
     }
 
     return baseAttrs
-  }, [isIOS, isAndroid])
+  }, [isIOS])
 
   // Handle video load events
   const handleLoadedData = useCallback(() => {
     setIsLoaded(true)
     setHasError(false)
+    setShowPlayButton(false)
   }, [])
 
   const handleError = useCallback(() => {
     setHasError(true)
     setIsLoaded(false)
+    setShowPlayButton(false)
   }, [])
 
   const handleCanPlay = useCallback(() => {
     setIsPlaying(true)
+    setShowPlayButton(false)
   }, [])
+
+  // Handle play button click
+  const handlePlayClick = useCallback(() => {
+    const video = videoRef.current
+    if (video) {
+      const playPromise = video.play()
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setIsPlaying(true)
+            setShowPlayButton(false)
+          })
+          .catch(() => {
+            setShowPlayButton(true)
+          })
+      }
+    }
+  }, [])
+
+  // Try to autoplay when video is ready
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || !isLoaded) return
+
+    // Try to autoplay
+    const playPromise = video.play()
+    
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          setIsPlaying(true)
+          setShowPlayButton(false)
+        })
+        .catch(() => {
+          // Autoplay failed, show play button
+          setShowPlayButton(true)
+        })
+    }
+  }, [isLoaded])
 
   // Lazy load video on intersection
   useEffect(() => {
@@ -218,37 +256,78 @@ const OptimizedVideo = memo(({
   // Fallback to image if video fails
   if (hasError) {
     return (
-      <Image
-        src={post.thumbnail.replace('.mp4', '.jpg') || "/placeholder.svg"}
-        alt={post.altText || post.caption}
-        fill
-        className="object-cover transition-transform duration-700 group-hover:scale-110"
-        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-        quality={85}
-        placeholder="blur"
-        blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxIRAD8AnQAZl//Z"
-      />
+      <div className="relative w-full h-full">
+        <Image
+          src={post.thumbnail.replace('.mp4', '.jpg') || "/placeholder.svg"}
+          alt={post.altText || post.caption}
+          fill
+          className="object-cover transition-transform duration-700 group-hover:scale-110"
+          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          quality={85}
+          placeholder="blur"
+          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxIRAD8AnQAZl//Z"
+        />
+        {/* Video placeholder overlay */}
+        <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+          <div className="bg-white/20 backdrop-blur-sm rounded-full p-3">
+            <Play size={24} className="text-white" />
+          </div>
+        </div>
+      </div>
     )
   }
 
   return (
-    <video
-      ref={videoRef}
-      src={isMobile && post.mobileThumbnail ? post.mobileThumbnail : post.thumbnail}
-      {...videoAttributes}
-      onLoadedData={handleLoadedData}
-      onError={handleError}
-      onCanPlay={handleCanPlay}
-      style={{
-        willChange: isPlaying ? 'transform' : 'auto',
-        transform: isPlaying ? 'translateZ(0)' : 'none',
-      }}
-      // iOS and Android specific attributes as data attributes
-      data-webkit-playsinline="true"
-      data-x5-playsinline="true"
-      data-x5-video-player-type="h5"
-      data-x5-video-player-fullscreen="true"
-    />
+    <div className="relative w-full h-full">
+      <video
+        ref={videoRef}
+        src={isMobile && post.mobileThumbnail ? post.mobileThumbnail : post.thumbnail}
+        {...videoAttributes}
+        onLoadedData={handleLoadedData}
+        onError={handleError}
+        onCanPlay={handleCanPlay}
+        style={{
+          willChange: isPlaying ? 'transform' : 'auto',
+          transform: isPlaying ? 'translateZ(0)' : 'none',
+        }}
+        // Universal cross-platform attributes
+        webkit-playsinline="true"
+        x5-playsinline="true"
+        x5-video-player-type="h5"
+        x5-video-player-fullscreen="true"
+        // Additional browser compatibility
+        controls={false}
+        disablePictureInPicture={true}
+        disableRemotePlayback={true}
+      >
+        {/* Multiple format support for maximum compatibility */}
+        <source src={post.thumbnail} type="video/mp4" />
+        <source src={post.thumbnail.replace('.mp4', '.webm')} type="video/webm" />
+        <source src={post.thumbnail.replace('.mp4', '.ogg')} type="video/ogg" />
+        
+        {/* Fallback text for unsupported browsers */}
+        <p className="text-white text-center p-4">
+          Your browser doesn't support video playback. 
+          <a href={post.thumbnail} className="underline ml-1">Download video</a>
+        </p>
+      </video>
+      
+      {/* Play button overlay when video is not playing */}
+      {showPlayButton && (
+        <motion.button
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={handlePlayClick}
+          className="absolute inset-0 bg-black/30 flex items-center justify-center group cursor-pointer"
+        >
+          <div className="bg-white/20 backdrop-blur-sm rounded-full p-4 group-hover:bg-white/30 transition-all duration-300">
+            <Play size={32} className="text-white ml-1" />
+          </div>
+        </motion.button>
+      )}
+    </div>
   )
 })
 OptimizedVideo.displayName = "OptimizedVideo"

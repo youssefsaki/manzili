@@ -130,26 +130,92 @@
   }
 }
 
-/* Ensure video elements don't interfere with scroll performance */
+/* Universal video compatibility for all platforms */
 video {
+  /* Force hardware acceleration */
   will-change: transform;
+  transform: translateZ(0);
   backface-visibility: hidden;
-}
-
-/* iOS Safari video compatibility */
-video::-webkit-media-controls {
-  display: none !important;
-}
-
-video::-webkit-media-controls-start-playback-button {
-  display: none !important;
-}
-
-/* Force hardware acceleration on iOS */
-video {
+  
+  /* Ensure proper rendering on all browsers */
   -webkit-transform: translateZ(0);
   -moz-transform: translateZ(0);
   -ms-transform: translateZ(0);
   -o-transform: translateZ(0);
-  transform: translateZ(0);
+  
+  /* Prevent video controls from interfering */
+  -webkit-media-controls {
+    display: none !important;
+  }
+  
+  /* iOS Safari specific fixes */
+  -webkit-playsinline: true;
+  -webkit-video-playable-inline: true;
+}
+
+/* Cross-browser video compatibility */
+@supports (-webkit-appearance: none) {
+  /* WebKit browsers (Safari, Chrome) */
+  video {
+    -webkit-transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+  }
+}
+
+@supports (-moz-appearance: none) {
+  /* Firefox */
+  video {
+    -moz-transform: translateZ(0);
+    -moz-backface-visibility: hidden;
+  }
+}
+
+@supports (-ms-ime-align: auto) {
+  /* Internet Explorer/Edge */
+  video {
+    -ms-transform: translateZ(0);
+    -ms-backface-visibility: hidden;
+  }
+}
+
+/* Mobile-specific video optimizations */
+@media (max-width: 768px) {
+  video {
+    /* Ensure videos work on mobile devices */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    
+    /* Prevent mobile browser interference */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* iOS Safari specific video fixes */
+@supports (-webkit-touch-callout: none) {
+  video {
+    /* iOS Safari video compatibility */
+    -webkit-transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    
+    /* Force inline playback */
+    -webkit-playsinline: true;
+    -webkit-video-playable-inline: true;
+    
+    /* Prevent fullscreen on iOS */
+    -webkit-presentation-mode: inline;
+  }
+}
+
+/* Android/Chrome specific video fixes */
+@supports (-webkit-appearance: none) and (display: flex) {
+  video {
+    /* Android Chrome optimizations */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    
+    /* Ensure proper playback */
+    -webkit-playsinline: true;
+  }
 }
