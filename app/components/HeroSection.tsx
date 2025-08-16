@@ -14,11 +14,13 @@ export default function HeroSection({ videoLoaded = true }: HeroSectionProps) {
   const [isVideoReady, setIsVideoReady] = useState(false)
   const [currentVideoSource, setCurrentVideoSource] = useState<string>("")
   
+  // Optimize scroll tracking with proper container reference
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end start"],
   })
 
+  // Create transforms - these are optimized by Framer Motion internally
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"])
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0])
   const scale = useTransform(scrollYProgress, [0, 1], [1, 1.1])
@@ -62,8 +64,7 @@ export default function HeroSection({ videoLoaded = true }: HeroSectionProps) {
     <section 
       id="home" 
       ref={ref} 
-      className="relative h-screen overflow-hidden bg-coffee-darkest"
-      style={{ position: 'relative' }}
+      className="relative h-screen w-full overflow-hidden bg-coffee-darkest"
       aria-label="Hero section"
     >
       {/* Video Background with Parallax */}

@@ -3,14 +3,9 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,
-  devIndicators: {
-    buildActivity: false,
-    buildActivityPosition: 'bottom-right',
-  },
-  // Completely disable Next.js branding and indicators
+  // Remove deprecated devIndicators configuration
   experimental: {
-    // Disable all development indicators
-    devIndicators: false,
+    // Keep experimental features clean
   },
 }
 

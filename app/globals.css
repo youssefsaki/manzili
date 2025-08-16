@@ -36,16 +36,47 @@
 
   html {
     scroll-behavior: smooth;
+    /* Ensure proper scroll context for Framer Motion */
+    position: relative;
+    height: 100%;
   }
   
   body {
     @apply bg-coffee-cream text-coffee-dark;
+    /* Ensure proper positioning context for scroll animations */
+    position: relative;
+    min-height: 100%;
+    /* Optimize for smooth animations */
+    will-change: scroll-position;
+  }
+
+  /* Ensure main container has proper positioning context */
+  #main {
+    position: relative;
+    min-height: 100vh;
   }
 }
 
 @layer components {
   .container {
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Performance optimizations for animations */
+  .animate-optimized {
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+  }
+
+  /* Hide scrollbars for better mobile experience */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Safari and Chrome */
   }
 }
 
@@ -62,4 +93,15 @@
 [class*="nextjs"],
 [class*="__next"] {
   display: none !important;
+}
+
+/* Smooth scrolling optimizations */
+* {
+  scroll-behavior: smooth;
+}
+
+/* Ensure video elements don't interfere with scroll performance */
+video {
+  will-change: transform;
+  backface-visibility: hidden;
 }

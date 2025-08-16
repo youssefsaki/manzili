@@ -70,8 +70,8 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta name="theme-color" content="#ffffff" />
       </head>
-      <body className={`${inter.className} antialiased`}>
-        <main id="main" role="main">
+      <body className={`${inter.className} antialiased relative`}>
+        <main id="main" role="main" className="relative">
           {children}
         </main>
       </body>

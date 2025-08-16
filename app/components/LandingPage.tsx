@@ -46,7 +46,7 @@ export default function LandingPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: isVisible ? 1 : 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="relative min-h-screen"
+          className="relative w-full"
         >
           <Header />
           
