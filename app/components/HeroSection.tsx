@@ -30,8 +30,9 @@ export default function HeroSection({ videoLoaded = true }: HeroSectionProps) {
     if (typeof window !== "undefined") {
       const isMobile = window.innerWidth < 768
       const source = isMobile 
-        ? "/hero-coffee-video-mobile.mp4" 
+        ? "/hero-coffee-mobile.mp4" 
         : "/hero-coffee-video-desktop.mp4"
+      console.log("Video source selected:", source, "isMobile:", isMobile)
       setCurrentVideoSource(source)
     }
   }, [])
@@ -42,7 +43,8 @@ export default function HeroSection({ videoLoaded = true }: HeroSectionProps) {
   }, [])
 
   // Video error handler
-  const handleVideoError = useCallback(() => {
+  const handleVideoError = useCallback((e: any) => {
+    console.error("Video failed to load:", e)
     console.warn("Video failed to load, falling back to image")
     setIsVideoReady(false)
   }, [])
@@ -96,7 +98,7 @@ export default function HeroSection({ videoLoaded = true }: HeroSectionProps) {
               media="(min-width: 768px)"
             />
             <source 
-              src="/hero-coffee-video-mobile.mp4" 
+              src="/hero-coffee-mobile.mp4" 
               type="video/mp4" 
               media="(max-width: 767px)"
             />
