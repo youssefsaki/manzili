@@ -302,8 +302,8 @@ const DesktopDrinkSlide = memo(({
 
       {/* Content Side */}
       <div className="flex flex-col justify-center">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >

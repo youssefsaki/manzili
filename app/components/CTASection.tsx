@@ -281,13 +281,13 @@ export default function CTASection() {
         </div>
 
         {/* Call to Action */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
           viewport={{ once: true, margin: "-50px" }}
-          className="text-center"
-        >
+        className="text-center"
+      >
           <p className="text-[#EAE0D5]/60 mb-6">Share your coffee moments with us</p>
           <div className="flex flex-wrap justify-center gap-4">
             {hashtags.map((hashtag) => (
@@ -299,7 +299,7 @@ export default function CTASection() {
               </span>
             ))}
           </div>
-        </motion.div>
+      </motion.div>
       </div>
     </section>
   )
